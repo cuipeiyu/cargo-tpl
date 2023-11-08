@@ -3,7 +3,6 @@ name = "{name}"
 version = "0.1.0"
 edition = "2021"
 authors = ["{author}"]
-rust-version = "1.73"
 license = "MIT OR Apache-2.0"
 
 [[bin]]

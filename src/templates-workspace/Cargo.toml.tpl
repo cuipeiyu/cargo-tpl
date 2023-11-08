@@ -3,7 +3,6 @@ resolver = "2"
 members = [ "crates/*" ]
 
 [workspace.package]
-rust-version = "1.73"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 authors = ["{author}"]
