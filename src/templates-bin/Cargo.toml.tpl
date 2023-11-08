@@ -10,7 +10,9 @@ license = "MIT OR Apache-2.0"
 name = "{name}"
 path = "src/main.rs"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[profile.release]
+lto = true
+opt-level = 3
 
 [dependencies]
 rand = { version = "0.8.5", features = [] }

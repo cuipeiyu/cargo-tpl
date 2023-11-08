@@ -4,13 +4,14 @@ version = "0.1.0"
 edition = "2021"
 authors = ["cuipeiyu <i@cuipeiyu.com>"]
 license = "MIT OR Apache-2.0"
-description = ""
+description = "cargo tpl [--lib,-l] [--workspace,-w] <project_name>"
 homepage = "https://github.com/cuipeiyu/cargo-tpl/"
 repository = "https://github.com/cuipeiyu/cargo-tpl/"
 documentation = "https://docs.rs/cargo-tpl"
 categories = ["development-tools::cargo-plugins", "command-line-utilities"]
 keywords = ["extension"]
 readme = "README.md"
+include = [ "src", "LICENSE-*", "README.md"]
 exclude = [ "*.png" ]
 
 [[bin]]
