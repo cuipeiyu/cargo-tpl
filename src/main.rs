@@ -1,6 +1,6 @@
-use std::io::{Write, Error};
-use std::path::PathBuf;
 use std::fs::OpenOptions;
+use std::io::{Error, Write};
+use std::path::PathBuf;
 use std::process::Command;
 
 fn main() {
@@ -84,19 +84,20 @@ fn main() {
         "Unknown".to_string()
     };
 
-    let git_init = git_exists && !{
-        let mut exists = false;
-        let mut iter = root.ancestors();
-        while let Some(p) = iter.next() {
-            if p.join(".git").exists() {
-                exists = true;
-                break;
+    let git_init = git_exists
+        && !{
+            let mut exists = false;
+            let mut iter = root.ancestors();
+            while let Some(p) = iter.next() {
+                if p.join(".git").exists() {
+                    exists = true;
+                    break;
+                }
             }
-        }
-        exists
-    };
+            exists
+        };
 
-    common::make(root, &author, project_name);
+    common::make(root, &author, project_name, lib);
 
     if workspace {
         workspace::make(root, &author, project_name);
@@ -108,10 +109,10 @@ fn main() {
 
     if git_init {
         Command::new("git")
-        .arg("init")
-        .current_dir(root)
-        .output()
-        .unwrap();
+            .arg("init")
+            .current_dir(root)
+            .output()
+            .unwrap();
     }
 
     println!("{}", "The project has been initialized. you can:");
@@ -127,7 +128,6 @@ fn main() {
         println!("  cargo update");
         println!("  cargo c");
     }
-
 }
 
 mod workspace {
@@ -176,14 +176,8 @@ mod lib {
 
     lazy_static! {
         static ref FILES: HashMap<&'static str, &'static str> = HashMap::from([
-            (
-                "Cargo.toml",
-                include_str!("templates-lib/Cargo.toml.tpl"),
-            ),
-            (
-                "src/lib.rs",
-                include_str!("templates-lib/src/lib.rs.tpl"),
-            ),
+            ("Cargo.toml", include_str!("templates-lib/Cargo.toml.tpl"),),
+            ("src/lib.rs", include_str!("templates-lib/src/lib.rs.tpl"),),
             (
                 "benches/benchmark.rs",
                 include_str!("templates-lib/benches/benchmark.rs.tpl"),
@@ -207,14 +201,8 @@ mod bin {
 
     lazy_static! {
         static ref FILES: HashMap<&'static str, &'static str> = HashMap::from([
-            (
-                "Cargo.toml",
-                include_str!("templates-bin/Cargo.toml.tpl"),
-            ),
-            (
-                "src/main.rs",
-                include_str!("templates-bin/src/main.rs.tpl"),
-            ),
+            ("Cargo.toml", include_str!("templates-bin/Cargo.toml.tpl"),),
+            ("src/main.rs", include_str!("templates-bin/src/main.rs.tpl"),),
         ]);
     }
 
@@ -238,28 +226,22 @@ mod common {
                 "LICENSE-APACHE",
                 include_str!("templates-common/apache.tpl"),
             ),
-            (
-                "LICENSE-MIT",
-                include_str!("templates-common/mit.tpl"),
-            ),
-            (
-                ".gitignore",
-                include_str!("templates-common/gitignore.tpl"),
-            ),
+            ("LICENSE-MIT", include_str!("templates-common/mit.tpl"),),
+            (".gitignore", include_str!("templates-common/gitignore.tpl"),),
             (
                 ".editorconfig",
                 include_str!("templates-common/editorconfig.tpl"),
             ),
-            (
-                "README.md",
-                include_str!("templates-common/readme.md.tpl"),
-            ),
+            ("README.md", include_str!("templates-common/readme.md.tpl"),),
         ]);
     }
 
-    pub(crate) fn make(root: &PathBuf, author: &str, project_name: &str) {
+    pub(crate) fn make(root: &PathBuf, author: &str, project_name: &str, ignore_lock_file: bool) {
         for (newpath, content) in &*FILES {
-            let buf = super::replace(content, author, project_name);
+            let mut buf = super::replace(content, author, project_name);
+            if ignore_lock_file && newpath == &".gitignore" {
+                buf = buf.replace("# Cargo.lock", "Cargo.lock");
+            }
             let buf = buf.as_bytes();
             super::write(root, newpath, buf).unwrap();
         }
@@ -273,7 +255,7 @@ fn replace(content: &str, author: &str, project_name: &str) -> String {
         .replace("{author}", author)
 }
 
-fn write(root: &PathBuf, newpath: &str, buf: &[u8]) -> Result<(), Error>{
+fn write(root: &PathBuf, newpath: &str, buf: &[u8]) -> Result<(), Error> {
     let mut path = root.clone();
     path.push(newpath);
 
@@ -301,26 +283,34 @@ fn write(root: &PathBuf, newpath: &str, buf: &[u8]) -> Result<(), Error>{
 fn read_gitconfig() -> String {
     // git config user.name
     let mut git_name = String::new();
-    let output = Command::new("git").arg("config").arg("--get").arg("user.name").output();
+    let output = Command::new("git")
+        .arg("config")
+        .arg("--get")
+        .arg("user.name")
+        .output();
     match output {
         Ok(output) => {
             if output.status.success() {
                 git_name.push_str(String::from_utf8_lossy(&output.stdout).trim());
             }
-        },
-        Err(_) => {},
+        }
+        Err(_) => {}
     }
 
     // git config user.email
     let mut git_email = String::new();
-    let output = Command::new("git").arg("config").arg("--get").arg("user.email").output();
+    let output = Command::new("git")
+        .arg("config")
+        .arg("--get")
+        .arg("user.email")
+        .output();
     match output {
         Ok(output) => {
             if output.status.success() {
                 git_email.push_str(String::from_utf8_lossy(&output.stdout).trim());
             }
-        },
-        Err(_) => {},
+        }
+        Err(_) => {}
     }
 
     if git_name.len() > 0 && git_email.len() > 0 {
