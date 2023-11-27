@@ -52,6 +52,13 @@ fn main() {
         yes
     };
 
+    for arg in args.iter() {
+        if arg.starts_with("-") {
+            println!("Unknown option: {}", arg);
+            return;
+        }
+    }
+
     if args.len() == 0 {
         println!("Usage: cargo tpl [--lib,-l] [--workspace,-w] <project_name>");
         return;
